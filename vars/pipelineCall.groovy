@@ -1,3 +1,4 @@
+#!groovy
 def call(String type,Map map) {
     if (type == 'maven') {
         pipeline {
@@ -38,6 +39,11 @@ def call(String type,Map map) {
                 //保持构建的最大个数
                 buildDiscarder(logRotator(numToKeepStr: '10'))
             }
+
+            triggers {
+                pollSCM('H 13 * * 1-5')
+            }
+
             post {
                 success {
                     script {
