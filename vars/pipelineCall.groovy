@@ -14,8 +14,8 @@ def call(String type,Map map) {
             }
             //环境变量，初始确定后一般不需更改
             tools {
-                maven 'Maven 3.5.2'
-                jdk 'jdk1.8'
+                maven "${map.maven}"
+                jdk   "${map.jdk}"
             }
             //常量参数，初始确定后一般不需更改
             environment{
