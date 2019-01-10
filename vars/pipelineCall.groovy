@@ -5,7 +5,7 @@ def call(String type,Map map) {
             //参数化变量,目前只支持[booleanParam, choice, credentials, file, text, password, run, string]这几种参数类型
             parameters {
                 choice(name:'scene',choices:"scene1:完整流水线\nscene2:代码检查\nscene3:测试部署",description: '场景选择，默认运行完整流水线，如果只做开发自测可选择代码检查，如果只做环境部署可选择测试部署')
-                choice(name: 'server',choices:'192.168.1.107,9090\n192.168.1.60,9090', description: '测试服务器列表选择(IP,TomcatPort,Name,Passwd)')
+                choice(name: 'server',choices:'192.168.1.107,9090,***,***\n192.168.1.60,9090,***,***', description: '测试服务器列表选择(IP,TomcatPort,Name,Passwd)')
                 string(name:'dubboPort', defaultValue: '31100', description: '测试服务器的dubbo服务端口')
                 //单元测试代码覆盖率要求，各项目视要求调整参数
                 string(name:'lineCoverage', defaultValue: '20', description: '单元测试代码覆盖率要求(%)，小于此值pipeline将会失败！')
