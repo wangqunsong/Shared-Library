@@ -6,6 +6,7 @@ def call(String type,Map map) {
             //参数化变量,目前只支持[booleanParam, choice, credentials, file, text, password, run, string]这几种参数类型
             parameters {
                 choice(name:'scene',choices:"scene1:完整流水线\nscene2:代码检查\nscene3:测试部署",description: '场景选择，默认运行完整流水线，如果只做开发自测可选择代码检查，如果只做环境部署可选择测试部署')
+                string(name:'repoBranch', defaultValue: "${map.repoBranch}", description: 'git分支名称')
                 choice(name:'server',choices:'10.10.10.23,9001,***,***\n10.10.10.114,9001,***,***',description:'测试环境地址（IP+Tomcat端口+name+password）')
                 string(name:'dubboPort', defaultValue: '31100', description: '测试服务器的dubbo服务端口')
                 //单元测试代码覆盖率要求，各项目视要求调整参数
@@ -109,7 +110,7 @@ def call(String type,Map map) {
                                 user="system"
                             }
                             echo "**********开始从${params.repoURL}获取代码**********"
-                            git url:params.repoURL, branch:params.repoBranch
+                            git url:REPO_URL, branch:params.repoBranch
                         }
                     }
                 }
