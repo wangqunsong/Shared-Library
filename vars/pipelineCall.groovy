@@ -115,10 +115,35 @@ def call(String type,Map map) {
                     }
                 }
                 stage ('单元测试') {
+                    //when指令允许Pipeline根据给定的条件确定是否执行该阶段,isUT为真时，执行单元测试
+                    when { expression {return isUT } }
                     steps {
-                        script {
-                            return isUT
+                        echo "单元测试完成"
+                    }
+                }
+
+                stage ('静态代码扫描') {
+                    when { expression {return isCA } }
+                    steps{
+                        echo "**********开始静态代码扫描！**********"
+                        withSonarQubeEnv('SonarQube') {
+                            sh "mvn -f pom.xml clean compile sonar:sonar"
                         }
+                        script {
+                            timeout(120){
+                                def qg = waitForQualityGate()
+                                if (qg.status != 'OK') {
+                                    error "本次扫描未通过Sonarqube的代码质量阈检查，请及时修改！failure: ${qg.status}"
+                                }
+                            }
+                        }
+                    }
+                }
+
+                stage ('测试环境部署') {
+                    when { expression {return isDP } }
+                    steps{
+                        echo '测试环境部署完成'
                     }
                 }
             }
