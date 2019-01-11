@@ -126,7 +126,7 @@ def call(String type,Map map) {
                         sh "mvn org.jacoco:jacoco-maven-plugin:prepare-agent  clean  package  -Dautoconfig.skip=true   -Dmaven.test.skip=false  -Dmaven.test.failure.ignore=true"
                         junit '**/target/surefire-reports/*.xml'
                         //当代码覆盖率低于70%时，构建失败
-                        jacoco changeBuildStatus: true, maximumLineCoverage:70
+                        jacoco changeBuildStatus: true, maximumLineCoverage:"70"
                         //注：多项目的工程，需要设置jacoco的destFile属性，合并所有的jacoco.exec报告到多项目工程的ProjectDirectory(根)目录
 
                     }
@@ -156,7 +156,7 @@ def call(String type,Map map) {
                     when { expression {return isFindBug } }
                     steps {
                         //指定检查**/lib/*.jar的组件
-                        dependencyCheckAnalyzer datadir: '', hintsFile: '', includeCsvReports: false, includeHtmlReports: false, includeJsonReports: false, isAutoupdateDisabled: false, outdir: '', scanpath: '**/lib/*.jar', skipOnScmChange: false, skipOnUpstreamChange: false, suppressionFile: '', zipExtensions: ''
+                        dependencyCheckAnalyzer datadir: '', hintsFile: '', includeCsvReports: false, includeVulnReports: true,includeHtmlReports: false, includeJsonReports: false, isAutoupdateDisabled: false, outdir: '', scanpath: '**/lib/*.jar', skipOnScmChange: false, skipOnUpstreamChange: false, suppressionFile: '', zipExtensions: ''
                         //有高级别组件漏洞时，fail掉pipeline
                         dependencyCheckPublisher canComputeNew: false, defaultEncoding: '', failedTotalHigh: '0', healthy: '', pattern: '', unHealthy: ''
                     }
@@ -168,7 +168,7 @@ def call(String type,Map map) {
                         echo '测试环境部署完成'
                     }
                 }
-            }
+            }wa
 
         }
     }
