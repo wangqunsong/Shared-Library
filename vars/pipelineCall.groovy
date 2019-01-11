@@ -118,7 +118,13 @@ def call(String type,Map map) {
                     //when指令允许Pipeline根据给定的条件确定是否执行该阶段,isUT为真时，执行单元测试
                     when { expression {return isUT } }
                     steps {
-                        echo "单元测试完成"
+                        echo "开始使用jacoco进行单元测试**********"
+                        sh "mvn org.jacoco:jacoco-maven-plugin:prepare-agent  clean  package  -Dautoconfig.skip=true   -Dmaven.test.skip=false  -Dmaven.test.failure.ignore=true"
+                        junit '**/target/surefire-reports/*.xml'
+                        //当代码覆盖率低于70%时，构建失败
+                        jacoco changeBuildStatus: true, maximumLineCoverage:70
+                        //注：多项目的工程，需要设置jacoco的destFile属性，合并所有的jacoco.exec报告到多项目工程的ProjectDirectory(根)目录
+
                     }
                 }
 
