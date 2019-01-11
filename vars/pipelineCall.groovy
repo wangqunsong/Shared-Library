@@ -5,7 +5,7 @@ def call(String type,Map map) {
             agent any
             //参数化变量,目前只支持[booleanParam, choice, credentials, file, text, password, run, string]这几种参数类型
             parameters {
-                choice(name:'scene',choices:"scene1:完整流水线\nscene2:代码检查\nscene3:测试部署",description: '场景选择，默认运行完整流水线，如果只做开发自测可选择代码检查，如果只做环境部署可选择测试部署')
+                choice(name:'scene',choices:"scene1:完整流水线\nscene2:单元测试\nscene3:代码检查\nscene4:安全组件检查\nscene5:测试部署",description: '场景选择，默认运行完整流水线，如果只做开发自测可选择代码检查，如果只做环境部署可选择测试部署')
                 string(name:'repoBranch', defaultValue: "${map.repoBranch}", description: 'git分支名称')
                 choice(name:'server',choices:'10.10.10.23,9001,***,***\n10.10.10.114,9001,***,***',description:'测试环境地址（IP+Tomcat端口+name+password）')
                 string(name:'dubboPort', defaultValue: '31100', description: '测试服务器的dubbo服务端口')
@@ -87,19 +87,23 @@ def call(String type,Map map) {
 
                             //选择场景
                             println params.scene
-                            isUT=params.scene.contains('scene1:完整流水线') || params.scene.contains('scene2:代码检查')
+
+                            //单元测试运行场景
+                            isUT=params.scene.contains('scene1:完整流水线') || params.scene.contains('scene2:单元测试')
                             println "isUT="+isUT
+
                             //静态代码检查运行场景
-                            isCA=params.scene.contains('scene1:完整流水线') || params.scene.contains('scene2:代码检查')
+                            isCA=params.scene.contains('scene1:完整流水线') || params.scene.contains('scene3:代码检查')
                             println "isCA="+isCA
+
+                            //安全组件检查运行场景
+                            isFindBug = params.scene.contains('scene1:完整流水线') || params.scene.contains('scene4:安全组件检查')
+                            println "isFindBug="+isFindBug
+
                             //部署测试环境运行场景
-                            isDP=params.scene.contains('scene1:完整流水线') || params.scene.contains('scene3:测试部署')
+                            isDP=params.scene.contains('scene1:完整流水线') || params.scene.contains('scene5:测试部署')
                             println "isDP="+isDP
-                            isDC=params.scene.contains('scene1:完整流水线')
-                            println "isDC="+isDC
-                            //接口测试运行场景
-                            isIT=params.scene.contains('scene1:完整流水线')
-                            println "isIT="+isIT
+
                             try{
                                 wrap([$class: 'BuildUser']){
                                     userEmail="${BUILD_USER_EMAIL},${QA_EMAIL}"
@@ -129,6 +133,7 @@ def call(String type,Map map) {
                 }
 
                 stage ('静态代码扫描') {
+                    //when指令允许Pipeline根据给定的条件确定是否执行该阶段,isCA为真时，执行静态代码扫描
                     when { expression {return isCA } }
                     steps{
                         echo "**********开始静态代码扫描！**********"
@@ -143,6 +148,17 @@ def call(String type,Map map) {
                                 }
                             }
                         }
+                    }
+                }
+
+                stage ('安全组件检查') {
+                    //when指令允许Pipeline根据给定的条件确定是否执行该阶段,isFindBug为真时，执行安全组件检查
+                    when { expression {return isFindBug } }
+                    steps {
+                        //指定检查**/lib/*.jar的组件
+                        dependencyCheckAnalyzer datadir: '', hintsFile: '', includeCsvReports: false, includeHtmlReports: false, includeJsonReports: false, isAutoupdateDisabled: false, outdir: '', scanpath: '**/lib/*.jar', skipOnScmChange: false, skipOnUpstreamChange: false, suppressionFile: '', zipExtensions: ''
+                        //有高级别组件漏洞时，fail掉pipeline
+                        dependencyCheckPublisher canComputeNew: false, defaultEncoding: '', failedTotalHigh: '0', healthy: '', pattern: '', unHealthy: ''
                     }
                 }
 
