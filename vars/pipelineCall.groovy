@@ -168,7 +168,7 @@ def call(String type,Map map) {
                         echo '测试环境部署完成'
                     }
                 }
-            }wa
+            }
 
         }
     }
