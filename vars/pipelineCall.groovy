@@ -159,6 +159,7 @@ def call(String type,Map map) {
                         dependencyCheckAnalyzer datadir: '', hintsFile: '', includeCsvReports: false, includeVulnReports: true,includeHtmlReports: false, includeJsonReports: false, isAutoupdateDisabled: false, outdir: '', scanpath: '**/lib/*.jar', skipOnScmChange: false, skipOnUpstreamChange: false, suppressionFile: '', zipExtensions: ''
                         //有高级别组件漏洞时，fail掉pipeline
                         dependencyCheckPublisher canComputeNew: false, defaultEncoding: '', failedTotalHigh: '0', healthy: '', pattern: '', unHealthy: ''
+                        archiveArtifacts allowEmptyArchive: true, artifacts: '**/dependency-check-report.xml', onlyIfSuccessful: true
                     }
                 }
 
