@@ -5,7 +5,7 @@ def call(String type,Map map) {
             agent any
             //参数化变量,目前只支持[booleanParam, choice, credentials, file, text, password, run, string]这几种参数类型
             parameters {
-                choice(name:'scene',choices:'scene1:完整流水线\nscene2:单元测试\nscene3:代码检查\nscene4:安全组件检查\nscene5:测试部署',description: '场景选择，默认运行完整流水线，如果只做开发自测可选择代码检查，如果只做环境部署可选择测试部署')
+                choice(name:'scene',choices:'scene0:完整流水线\nscene1:静态代码检查\nscene2:单元测试\nscene3:测试部署\nscene4:接口自动化测试\nscene5:UI自动化测试\nscene6:安全组件检查\nscene7:性能自动化测试',description: '场景选择，默认运行完整流水线，其他场景根据需要自行选择')
                 string(name:'repoBranch', defaultValue: "${map.repoBranch}", description: 'git分支名称')
                 choice(name:'server',choices:'10.10.10.23,9001,***,***\n10.10.10.114,9001,***,***',description:'测试环境地址（IP+Tomcat端口+name+password）')
                 string(name:'dubboPort', defaultValue: '31100', description: '测试服务器的dubbo服务端口')
