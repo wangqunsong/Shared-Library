@@ -5,7 +5,7 @@ def call(String type,Map map) {
             agent any
             //参数化变量,目前只支持[booleanParam, choice, credentials, file, text, password, run, string]这几种参数类型
             parameters {
-                choice(name:'scene',choices:'scene1:完整流水线\nscene2:单元测试\nscene3:代码检查\nscene4:安全组件检查\nscene5:测试部署',description: '场景选择，默认运行完整流水线，如果只做开发自测可选择代码检查，如果只做环境部署可选择测试部署')
+                choice(name:'scene',choices:'scene0:完整流水线\nscene1:静态代码检查\nscene2:单元测试\nscene3:测试部署\nscene4:接口自动化测试\nscene5:UI自动化测试\nscene6:安全组件检查\nscene7:性能自动化测试',description: '场景选择，默认运行完整流水线，其他场景根据需要自行选择')
                 string(name:'repoBranch', defaultValue: "${map.repoBranch}", description: 'git分支名称')
                 choice(name:'server',choices:'10.10.10.23,9001,***,***\n10.10.10.114,9001,***,***',description:'测试环境地址（IP+Tomcat端口+name+password）')
                 string(name:'dubboPort', defaultValue: '31100', description: '测试服务器的dubbo服务端口')
@@ -88,21 +88,37 @@ def call(String type,Map map) {
                             //选择场景
                             println params.scene
 
-                            //单元测试运行场景
-                            isUT=params.scene.contains('scene1:完整流水线') || params.scene.contains('scene2:单元测试')
-                            println "isUT="+isUT
+                            //完整流水线场景
+                            isStage=params.scene.contains('scene0:完整流水线')
+                            println "isStage="+isStage
 
                             //静态代码检查运行场景
-                            isCA=params.scene.contains('scene1:完整流水线') || params.scene.contains('scene3:代码检查')
-                            println "isCA="+isCA
+                            isStage1=params.scene.contains('scene0:完整流水线') || params.scene.contains('scene1:静态代码检查')
+                            println "isStage1="+isStage1
 
-                            //安全组件检查运行场景
-                            isFindBug = params.scene.contains('scene1:完整流水线') || params.scene.contains('scene4:安全组件检查')
-                            println "isFindBug="+isFindBug
+                            //单元测试运行场景
+                            isStage2=params.scene.contains('scene0:完整流水线') || params.scene.contains('scene2:单元测试')
+                            println "isStage2="+isStage2
 
                             //部署测试环境运行场景
-                            isDP=params.scene.contains('scene1:完整流水线') || params.scene.contains('scene5:测试部署')
-                            println "isDP="+isDP
+                            isStage3=params.scene.contains('scene0:完整流水线') || params.scene.contains('scene3:测试部署')
+                            println "isStage3="+isStage3
+
+                            //接口自动化测试场景
+                            isStage4=params.scene.contains('scene0:完整流水线') || params.scene.contains('scene4:接口自动化测试')
+                            println "isStage4="+isStage4
+
+                            //UI自动化测试
+                            isStage5=params.scene.contains('scene0:完整流水线') || params.scene.contains('scene5:UI自动化测试')
+                            println "isStage5="+isStage5
+
+                            //安全组件检查运行场景
+                            isStage6 = params.scene.contains('scene0:完整流水线') || params.scene.contains('scene6:安全组件检查')
+                            println "isStage6="+isStage6
+
+                            //性能自动化运行场景
+                            isStage7 = params.scene.contains('scene0:完整流水线') || params.scene.contains('scene7:性能自动化测试')
+                            println "isStage7="+isStage7
 
                             try{
                                 wrap([$class: 'BuildUser']){
@@ -118,23 +134,10 @@ def call(String type,Map map) {
                         }
                     }
                 }
-                stage ('单元测试') {
-                    //when指令允许Pipeline根据给定的条件确定是否执行该阶段,isUT为真时，执行单元测试
-                    when { expression {return isUT } }
-                    steps {
-                        echo "开始使用jacoco进行单元测试**********"
-                        sh "mvn org.jacoco:jacoco-maven-plugin:prepare-agent  clean  package  -Dautoconfig.skip=true   -Dmaven.test.skip=false  -Dmaven.test.failure.ignore=true"
-                        junit '**/target/surefire-reports/*.xml'
-                        //当代码覆盖率低于70%时，构建失败
-                        jacoco changeBuildStatus: true, maximumLineCoverage:"70"
-                        //注：多项目的工程，需要设置jacoco的destFile属性，合并所有的jacoco.exec报告到多项目工程的ProjectDirectory(根)目录
-
-                    }
-                }
 
                 stage ('静态代码扫描') {
-                    //when指令允许Pipeline根据给定的条件确定是否执行该阶段,isCA为真时，执行静态代码扫描
-                    when { expression {return isCA } }
+                    //when指令允许Pipeline根据给定的条件确定是否执行该阶段,isStage1为真时，执行静态代码扫描
+                    when { expression {return isStage1 } }
                     steps{
                         echo "**********开始静态代码扫描！**********"
                         withSonarQubeEnv('SonarQube') {
@@ -151,9 +154,45 @@ def call(String type,Map map) {
                     }
                 }
 
+                stage ('单元测试') {
+                    //when指令允许Pipeline根据给定的条件确定是否执行该阶段,isStage2为真时，执行单元测试
+                    when { expression {return isStage2 } }
+                    steps {
+                        echo "开始使用jacoco进行单元测试**********"
+                        sh "mvn org.jacoco:jacoco-maven-plugin:prepare-agent  clean  package  -Dautoconfig.skip=true   -Dmaven.test.skip=false  -Dmaven.test.failure.ignore=true"
+                        junit '**/target/surefire-reports/*.xml'
+                        //当代码覆盖率低于70%时，构建失败
+                        jacoco changeBuildStatus: true, maximumLineCoverage:"70"
+                        //注：多项目的工程，需要设置jacoco的destFile属性，合并所有的jacoco.exec报告到多项目工程的ProjectDirectory(根)目录
+
+                    }
+                }
+
+                stage ('测试环境部署') {
+                    when { expression {return isStage3 } }
+                    steps{
+                        //上线脚本一般由运维人员负责提供，
+                        echo '测试环境部署完成'
+                    }
+                }
+
+                stage ('接口自动化测试') {
+                    when { expression {return isStage4 } }
+                    steps{
+                        echo '根据接口自动化框架自行配置'
+                    }
+                }
+
+                stage ('接口自动化测试') {
+                    when { expression {return isStage5 } }
+                    steps{
+                        echo '根据UI自动化框架自行配置'
+                    }
+                }
+
                 stage ('安全组件检查') {
                     //when指令允许Pipeline根据给定的条件确定是否执行该阶段,isFindBug为真时，执行安全组件检查
-                    when { expression {return isFindBug } }
+                    when { expression {return isStage6 } }
                     steps {
                         //指定检查**/lib/*.jar的组件
                         dependencyCheckAnalyzer datadir: '', hintsFile: '', includeCsvReports: false, includeVulnReports: true,includeHtmlReports: true, includeJsonReports: false, isAutoupdateDisabled: false, outdir: '', scanpath: '**/lib/*.jar', skipOnScmChange: false, skipOnUpstreamChange: false, suppressionFile: '', zipExtensions: ''
@@ -163,12 +202,13 @@ def call(String type,Map map) {
                     }
                 }
 
-                stage ('测试环境部署') {
-                    when { expression {return isDP } }
+                stage ('性能自动化测试') {
+                    when { expression {return isStage5 } }
                     steps{
-                        echo '测试环境部署完成'
+                        echo '根据性能自动化自行配置'
                     }
                 }
+
             }
 
         }
