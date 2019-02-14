@@ -5,7 +5,7 @@ def call(String type,Map map) {
             agent any
             //参数化变量,目前只支持[booleanParam, choice, credentials, file, text, password, run, string]这几种参数类型
             parameters {
-                choice(name:'scene',choices:'scene0:完整流水线\nscene1:静态代码检查\nscene2:单元测试\nscene3:测试部署\nscene4:接口自动化测试\nscene5:UI自动化测试\nscene6:安全组件检查\nscene7:性能自动化测试',description: '场景选择，默认运行完整流水线，其他场景根据需要自行选择')
+                choice(name:'scene',choices:'scene1:完整流水线\nscene2:单元测试\nscene3:代码检查\nscene4:安全组件检查\nscene5:测试部署',description: '场景选择，默认运行完整流水线，如果只做开发自测可选择代码检查，如果只做环境部署可选择测试部署')
                 string(name:'repoBranch', defaultValue: "${map.repoBranch}", description: 'git分支名称')
                 choice(name:'server',choices:'10.10.10.23,9001,***,***\n10.10.10.114,9001,***,***',description:'测试环境地址（IP+Tomcat端口+name+password）')
                 string(name:'dubboPort', defaultValue: '31100', description: '测试服务器的dubbo服务端口')
@@ -136,7 +136,7 @@ def call(String type,Map map) {
                 }
 
                 stage ('静态代码扫描') {
-                    //when指令允许Pipeline根据给定的条件确定是否执行该阶段,isStage1为真时，执行静态代码扫描
+                    //when指令允许Pipeline根据给定的条件确定是否执行该阶段,isCA为真时，执行静态代码扫描
                     when { expression {return isStage1 } }
                     steps{
                         echo "**********开始静态代码扫描！**********"
@@ -155,7 +155,7 @@ def call(String type,Map map) {
                 }
 
                 stage ('单元测试') {
-                    //when指令允许Pipeline根据给定的条件确定是否执行该阶段,isStage2为真时，执行单元测试
+                    //when指令允许Pipeline根据给定的条件确定是否执行该阶段,isUT为真时，执行单元测试
                     when { expression {return isStage2 } }
                     steps {
                         echo "开始使用jacoco进行单元测试**********"
@@ -171,20 +171,19 @@ def call(String type,Map map) {
                 stage ('测试环境部署') {
                     when { expression {return isStage3 } }
                     steps{
-                        //上线脚本一般由运维人员负责提供，
                         echo '测试环境部署完成'
                     }
                 }
 
                 stage ('接口自动化测试') {
-                    when { expression {return isStage4 } }
+                    when { expression {return isStage4 }}
                     steps{
                         echo '根据接口自动化框架自行配置'
                     }
                 }
 
-                stage ('接口自动化测试') {
-                    when { expression {return isStage5 } }
+                stage ('UI自动化测试') {
+                    when { expression {return isStage5 }}
                     steps{
                         echo '根据UI自动化框架自行配置'
                     }
@@ -203,12 +202,11 @@ def call(String type,Map map) {
                 }
 
                 stage ('性能自动化测试') {
-                    when { expression {return isStage5 } }
+                    when { expression {return isStage7 }}
                     steps{
-                        echo '根据性能自动化自行配置'
+                        echo '根据性能自动化测试框架自行配置'
                     }
                 }
-
             }
 
         }
